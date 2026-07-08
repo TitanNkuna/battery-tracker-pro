@@ -7,7 +7,7 @@
 ========================================================= */
 
 /* ---------- CONFIG — point to your Vercel deployment ---------- */
-const API_BASE = window.BATTERY_API_BASE || 'https://battery-tracker-pro.vercel.app';
+const API_BASE = window.BATTERY_API_BASE || 'https://battery-tracker-pro-eight.vercel.app';
 
 /* ---------- GLOBAL STATE ---------- */
 let batteries  = [];
