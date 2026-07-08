@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Battery Tracking System PRO</title>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+<style>
+:root{
+  --orange:#ff6200;
+  --orange-dark:#e55a00;
+  --orange-soft:#fff1e6;
+  --bg:#f5f7fb;
+  --card:#ffffff;
+  --text:#1f2937;
+  --muted:#6b7280;
+  --green:#22c55e;
+  --green-soft:#ecfdf3;
+  --yellow:#eab308;
+  --yellow-soft:#fefbe8;
+  --red:#ef4444;
+  --red-soft:#fef2f2;
+  --border:#e5e7eb;
+  --shadow:0 8px 24px rgba(0,0,0,0.06);
+  --radius:16px;
+}
+
+*{ margin:0; padding:0; box-sizing:border-box; }
+
+body{
+  font-family:'Segoe UI',system-ui,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ===== HEADER ===== */
+.header{
+  background:linear-gradient(135deg,var(--orange),#ff8f42);
+  color:white;
+  padding:16px 22px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  position:sticky;
+  top:0;
+  z-index:100;
+  box-shadow:0 4px 20px rgba(0,0,0,0.15);
+}
+.header-left{ display:flex; align-items:center; gap:16px; }
+.logo{
+  width:52px; height:52px;
+  background:white;
+  border-radius:14px;
+  display:flex; align-items:center; justify-content:center;
+  color:var(--orange);
+  font-size:26px;
+  flex-shrink:0;
+}
+.header-title h1{ font-size:22px; line-height:1.2; }
+.header-title p{ font-size:12.5px; opacity:0.92; }
+#saClock{ margin-top:4px; font-size:11.5px; opacity:0.85; }
+.hamburger{ font-size:28px; cursor:pointer; line-height:1; }
+.header-right{ display:flex; align-items:center; gap:10px; }
+.sync-pill{
+  font-size:11px;
+  background:rgba(255,255,255,0.18);
+  padding:6px 10px;
+  border-radius:999px;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  white-space:nowrap;
+}
+.sync-dot{
+  width:7px;height:7px;border-radius:50%;
+  background:#bbf7d0;
+  flex-shrink:0;
+}
+.sync-dot.syncing{ background:#fde68a; animation:pulse 1s infinite; }
+.sync-dot.error{ background:#fecaca; }
+@keyframes pulse{ 0%,100%{opacity:1;} 50%{opacity:0.3;} }
+
+/* ===== SIDEBAR ===== */
+.sidebar{
+  position:fixed; left:-300px; top:0;
+  width:290px; height:100vh;
+  background:white;
+  box-shadow:5px 0 30px rgba(0,0,0,0.15);
+  transition:0.3s;
+  z-index:200;
+  overflow-y:auto;
+}
+.sidebar.open{ left:0; }
+.sidebar-header{
+  background:var(--orange);
+  color:white;
+  padding:20px;
+  display:flex; justify-content:space-between; align-items:center;
+}
+.menu{ padding:14px; }
+.menu-item{
+  padding:14px 16px;
+  border-radius:12px;
+  cursor:pointer;
+  display:flex; align-items:center; gap:13px;
+  margin-bottom:6px;
+  transition:0.15s;
+  font-size:15px;
+  color:var(--text);
+}
+.menu-item:hover{ background:var(--orange-soft); color:var(--orange); }
+.menu-item.active{ background:var(--orange-soft); color:var(--orange); font-weight:600; }
+.menu-divider{ height:1px; background:var(--border); margin:10px 6px; }
+.overlay{
+  display:none; position:fixed; inset:0;
+  background:rgba(0,0,0,0.35); z-index:150;
+}
+.overlay.show{ display:block; }
+
+/* ===== MAIN ===== */
+.main-content{ padding:22px; max-width:1280px; margin:0 auto; }
+.section-title{ margin-bottom:18px; }
+.section-title h1{ font-size:26px; }
+.section-title p{ color:var(--muted); font-size:14px; margin-top:2px; }
+
+/* ===== GRID / CARD ===== */
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
+  gap:16px;
+  margin-bottom:22px;
+}
+.card{
+  background:var(--card);
+  border-radius:var(--radius);
+  padding:22px;
+  box-shadow:var(--shadow);
+  border:1px solid rgba(0,0,0,0.03);
+}
+.card-title{
+  display:flex; justify-content:space-between; align-items:center;
+  margin-bottom:16px;
+}
+.card-title h3{ font-size:15px; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:0.04em; }
+.big-number{ font-size:46px; text-align:center; color:var(--orange); font-weight:700; line-height:1; }
+.big-number.green{ color:var(--green); }
+.big-number.red{ color:var(--red); }
+.stat-sub{ text-align:center; font-size:12.5px; color:var(--muted); margin-top:6px; }
+
+/* ===== TABLE ===== */
+.table-wrapper{ overflow-x:auto; }
+table{ width:100%; border-collapse:collapse; }
+th{
+  background:#fafafa;
+  color:var(--muted);
+  padding:12px 14px;
+  text-align:left;
+  font-size:12.5px;
+  text-transform:uppercase;
+  letter-spacing:0.03em;
+  font-weight:600;
+  border-bottom:2px solid var(--border);
+  white-space:nowrap;
+}
+td{ padding:13px 14px; border-bottom:1px solid #f0f0f0; font-size:14px; }
+tr:hover td{ background:#fafafa; }
+.empty-row td{ text-align:center; color:var(--muted); padding:30px; font-style:italic; }
+
+/* ===== BUTTONS ===== */
+button{
+  border:none; padding:11px 18px; border-radius:11px;
+  cursor:pointer; font-weight:600; font-size:14px;
+  transition:0.15s; margin:3px;
+}
+.btn-orange{ background:var(--orange); color:white; }
+.btn-orange:hover{ background:var(--orange-dark); }
+.btn-outline{ border:2px solid var(--orange); background:transparent; color:var(--orange); padding:9px 16px; }
+.btn-outline:hover{ background:var(--orange-soft); }
+.btn-outline-red{ border:2px solid var(--red); background:transparent; color:var(--red); }
+.btn-outline-red:hover{ background:var(--red-soft); }
+.btn-ghost{ background:transparent; color:var(--muted); padding:9px 14px; }
+.btn-ghost:hover{ background:#f0f0f0; }
+.btn-sm{ padding:7px 12px; font-size:12.5px; }
+button:disabled{ opacity:0.5; cursor:not-allowed; }
+
+/* ===== INPUTS ===== */
+.search-box, input, select, textarea{
+  width:100%; padding:13px; border-radius:11px;
+  border:2px solid var(--border); margin-bottom:14px;
+  font-size:14px; font-family:inherit; color:var(--text);
+}
+input:focus, select:focus, textarea:focus{ outline:none; border-color:var(--orange); }
+label{ font-size:14px; display:flex; align-items:center; gap:8px; }
+.field-label{ font-size:12.5px; font-weight:600; color:var(--muted); margin-bottom:6px; display:block; text-transform:uppercase; letter-spacing:0.03em; }
+
+/* ===== BADGES ===== */
+.badge{ padding:6px 11px; border-radius:999px; color:white; font-size:11.5px; font-weight:700; white-space:nowrap; }
+.green{ background:var(--green); }
+.yellow{ background:var(--yellow); color:#111; }
+.red{ background:var(--red); }
+.badge.outline{ background:transparent; border:1.5px solid currentColor; }
+.conf-high{ color:var(--green); }
+.conf-medium{ color:var(--yellow); }
+.conf-low{ color:var(--muted); }
+
+/* ===== MODAL ===== */
+.modal{
+  display:none; position:fixed; inset:0;
+  background:rgba(0,0,0,0.65);
+  justify-content:center; align-items:center;
+  z-index:300; padding:20px;
+}
+.modal-content{
+  background:white; width:95%; max-width:1000px; max-height:92vh;
+  overflow-y:auto; border-radius:18px; padding:26px;
+  position:relative;
+}
+.close-btn{ position:absolute; top:14px; right:18px; font-size:28px; cursor:pointer; color:var(--muted); line-height:1; }
+.close-btn:hover{ color:var(--text); }
+
+/* ===== ALERTS ===== */
+.alert{ background:var(--orange-soft); border-left:4px solid var(--orange); padding:14px 16px; border-radius:10px; margin-bottom:10px; font-size:14px; }
+.alert.low{ background:var(--red-soft); border-left-color:var(--red); }
+.alert.warn{ background:var(--yellow-soft); border-left-color:var(--yellow); }
+.alert strong{ display:block; margin-bottom:2px; font-size:13px; }
+
+/* ===== PREDICTION ELEMENTS ===== */
+.forecast-bar{ display:flex; gap:10px; margin-bottom:18px; flex-wrap:wrap; }
+.forecast-chip{
+  flex:1; min-width:140px;
+  background:#fafafa; border-radius:12px; padding:14px;
+  text-align:center; border:1px solid var(--border);
+}
+.forecast-chip .n{ font-size:26px; font-weight:700; color:var(--text); }
+.forecast-chip .l{ font-size:11.5px; color:var(--muted); text-transform:uppercase; letter-spacing:0.03em; margin-top:2px; }
+.forecast-chip.danger .n{ color:var(--red); }
+.forecast-chip.warn .n{ color:var(--yellow); }
+.trend-spark{ display:inline-block; vertical-align:middle; }
+.note-text{ font-size:12.5px; color:var(--muted); line-height:1.5; }
+
+/* ===== TOAST ===== */
+.toast-container{ position:fixed; bottom:24px; right:24px; z-index:500; display:flex; flex-direction:column; gap:10px; }
+.toast{
+  background:#1f2937; color:white; padding:14px 18px; border-radius:12px;
+  box-shadow:0 8px 24px rgba(0,0,0,0.25); font-size:14px; min-width:220px;
+  display:flex; align-items:center; gap:10px;
+  animation:slideIn 0.25s ease-out;
+}
+.toast.success{ background:#15803d; }
+.toast.error{ background:#b91c1c; }
+@keyframes slideIn{ from{ transform:translateX(40px); opacity:0; } to{ transform:translateX(0); opacity:1; } }
+
+/* ===== LOADING ===== */
+.loading-overlay{
+  position:fixed; inset:0; background:var(--bg);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  z-index:1000; gap:14px;
+}
+.spinner{
+  width:40px; height:40px; border:4px solid var(--orange-soft);
+  border-top-color:var(--orange); border-radius:50%;
+  animation:spin 0.8s linear infinite;
+}
+@keyframes spin{ to{ transform:rotate(360deg); } }
+
+@media(max-width:768px){
+  .header{ flex-direction:column; align-items:flex-start; gap:12px; }
+  .main-content{ padding:14px; }
+  .header-right{ width:100%; justify-content:space-between; }
+}
+</style>
+</head>
+<body>
+
+<div id="loadingOverlay" class="loading-overlay">
+  <div class="spinner"></div>
+  <div style="color:var(--muted);font-size:14px;">Loading battery data&hellip;</div>
+</div>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-left">
+    <div class="hamburger" onclick="toggleSidebar()">&#9776;</div>
+    <div class="logo"><i class="fas fa-battery-three-quarters"></i></div>
+    <div class="header-title">
+      <h1>Battery Tracking System PRO</h1>
+      <p id="headerPropertyName">Battery Tracking System PRO</p>
+      <div id="saClock"></div>
+    </div>
+  </div>
+  <div class="header-right">
+    <span class="sync-pill" id="syncPill"><span class="sync-dot" id="syncDot"></span><span id="syncText">Synced</span></span>
+    <span id="currentUser" style="font-size:13px;"></span>
+    <button class="btn-outline" style="color:white;border-color:white;" onclick="logout()" id="logoutBtn" hidden>Logout</button>
+  </div>
+</div>
+
+<div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+<!-- SIDEBAR -->
+<div id="sidebar" class="sidebar">
+  <div class="sidebar-header">
+    <h2>Menu</h2>
+    <span style="cursor:pointer;font-size:28px;" onclick="toggleSidebar()">&times;</span>
+  </div>
+  <div class="menu">
+    <div class="menu-item" data-section="dashboard" onclick="showSection('dashboard')">
+      <i class="fas fa-chart-line"></i> Dashboard
+    </div>
+    <div class="menu-item" data-section="predictions" onclick="showSection('predictions')">
+      <i class="fas fa-wand-magic-sparkles"></i> Predictions
+    </div>
+    <div class="menu-divider"></div>
+    <div class="menu-item" data-section="supervisor" onclick="showSection('supervisor')">
+      <i class="fas fa-tools"></i> Supervisor
+    </div>
+    <div class="menu-item" data-section="technician" onclick="showSection('technician')">
+      <i class="fas fa-user"></i> Technician
+    </div>
+    <div class="menu-divider"></div>
+    <div class="menu-item" onclick="showDeveloperDashboard()" style="color:var(--red);">
+      <i class="fas fa-user-cog"></i> Developer Dashboard
+    </div>
+  </div>
+</div>
+
+<div class="main-content">
+
+<!-- DASHBOARD -->
+<div id="dashboardSection">
+  <div class="section-title">
+    <h1>Battery Dashboard</h1>
+    <p>Live fleet status, shared across every device on your team</p>
+  </div>
+
+  <div id="dashboardAlert"></div>
+
+  <div class="grid">
+    <div class="card">
+      <div class="card-title"><h3>Stock On Hand</h3><i class="fas fa-boxes" style="color:var(--orange);"></i></div>
+      <div class="big-number" id="stockCountDisplay">&ndash;</div>
+      <div class="stat-sub" id="stockRunwaySub"></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><h3>Healthy</h3><i class="fas fa-check-circle" style="color:var(--green);"></i></div>
+      <div class="big-number green" id="healthyCount">0</div>
+      <div class="stat-sub">&gt; 60% charge</div>
+    </div>
+    <div class="card">
+      <div class="card-title"><h3>Critical</h3><i class="fas fa-triangle-exclamation" style="color:var(--red);"></i></div>
+      <div class="big-number red" id="criticalCount">0</div>
+      <div class="stat-sub">&le; 30% charge</div>
+      <button class="btn-outline-red btn-sm" style="width:100%; margin-top:12px;" onclick="exportCriticalBatteriesToPDF()">
+        <i class="fas fa-file-pdf"></i> Export critical as PDF
+      </button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><h3>Battery Status Overview</h3></div>
+    <canvas id="statusChart" height="90"></canvas>
+  </div>
+
+  <br>
+
+  <div class="card">
+    <div class="card-title">
+      <h3>Battery Life Predictions</h3>
+      <button class="btn-outline btn-sm" onclick="showSection('predictions')">Full forecast &rarr;</button>
+    </div>
+    <div class="table-wrapper">
+      <table id="dashboardLifeTable"></table>
+    </div>
+  </div>
+</div>
+
+<!-- PREDICTIONS -->
+<div id="predictionsSection" style="display:none;">
+  <div class="section-title">
+    <h1>Battery Life Predictions</h1>
+    <p>Statistical forecast from each battery's discharge history</p>
+  </div>
+
+  <div class="forecast-bar" id="forecastBar"></div>
+
+  <div class="card" style="margin-bottom:16px;">
+    <div class="card-title"><h3>Reorder Forecast</h3></div>
+    <canvas id="forecastChart" height="90"></canvas>
+    <p class="note-text" id="forecastNote" style="margin-top:12px;"></p>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><h3>Per-Battery Forecast</h3></div>
+    <p class="note-text" style="margin-bottom:14px;">
+      Predictions use linear regression on each battery's readings since its last replacement.
+      Confidence improves with more logged readings &mdash; batteries with only one reading show an estimate based on fleet averages.
+    </p>
+    <div class="table-wrapper">
+      <table id="predictionTable"></table>
+    </div>
+  </div>
+</div>
+
+<!-- SUPERVISOR -->
+<div id="supervisorSection" style="display:none;">
+  <div class="section-title">
+    <h1>Supervisor Panel</h1>
+    <p>Battery maintenance management</p>
+  </div>
+
+  <div class="card">
+    <button class="btn-orange" onclick="showAddForm()"><i class="fas fa-plus"></i> Add Battery</button>
+    <button class="btn-orange" onclick="showAddReadingForm()"><i class="fas fa-plus"></i> Add Reading</button>
+    <button class="btn-orange" onclick="updateStock()"><i class="fas fa-boxes"></i> Update Stock</button>
+    <button class="btn-outline" onclick="showViewData()">View All Data</button>
+    <button class="btn-outline" onclick="showImportModal()"><i class="fas fa-file-import"></i> Import Data</button>
+  </div>
+
+  <br>
+
+  <div class="card">
+    <input type="text" id="searchInput" class="search-box" placeholder="Search battery..." onkeyup="renderMaintenanceTable()">
+    <div class="table-wrapper">
+      <table id="maintTable"></table>
+    </div>
+  </div>
+</div>
+
+<!-- TECHNICIAN -->
+<div id="technicianSection" style="display:none;">
+  <div class="section-title">
+    <h1>Technician Panel</h1>
+    <p>Battery monitoring & updates</p>
+  </div>
+  <div class="card">
+    <div class="table-wrapper">
+      <table id="viewerTable"></table>
+    </div>
+  </div>
+</div>
+
+<!-- DEVELOPER -->
+<div id="developerSection" style="display:none;">
+  <div class="section-title">
+    <h1>Developer Dashboard</h1>
+    <p>Property management, user management &amp; data tools</p>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-bottom:14px;">Add Property</h3>
+    <p class="note-text" style="margin-bottom:12px;">Each property gets its own completely isolated database. Users at one property never see another property's data.</p>
+    <label class="field-label">Property Name</label>
+    <input type="text" id="newPropertyName" class="search-box" placeholder="e.g. Canopy by Hilton Longkloof">
+    <label class="field-label">Property Code (short, no spaces)</label>
+    <input type="text" id="newPropertyCode" class="search-box" placeholder="e.g. canopy-longkloof">
+    <label class="field-label">Supervisor password for this property</label>
+    <input type="password" id="newPropertyPassword" class="search-box" placeholder="Choose a password">
+    <button class="btn-orange" onclick="createProperty()">Create Property</button>
+  </div>
+
+  <br>
+  <div id="propertiesTableWrap" class="card"></div>
+  <br>
+
+  <div class="card">
+    <h3 style="margin-bottom:14px;">Create User (current property)</h3>
+    <input type="text" id="newUsername" class="search-box" placeholder="Full Name">
+    <select id="newUserRole" class="search-box">
+      <option value="technician">Technician</option>
+      <option value="supervisor">Supervisor</option>
+    </select>
+    <button class="btn-orange" onclick="createNewUser()">Create User</button>
+  </div>
+
+  <br>
+
+  <div class="card">
+    <h3 style="margin-bottom:14px;">Users in this property</h3>
+    <div class="table-wrapper">
+      <table id="usersTable"></table>
+    </div>
+  </div>
+
+  <br>
+
+  <div class="card">
+    <h3 style="margin-bottom:14px;">Data Tools</h3>
+    <button class="btn-outline" onclick="forceSync()">Force Refresh From Server</button>
+  </div>
+</div>
+
+</div>
+
+<!-- LOGIN MODAL -->
+<div id="nameModal" class="modal">
+  <div class="modal-content" style="max-width:420px;">
+    <h2 style="margin-bottom:6px;">Login</h2>
+    <p class="note-text" style="margin-bottom:18px;">Select your property, then enter your credentials.</p>
+    <label class="field-label">Property</label>
+    <select id="propertySelect" class="search-box">
+      <option value="">Loading...</option>
+    </select>
+    <label class="field-label">Username</label>
+    <input type="text" id="userNameInput" class="search-box" placeholder="Username">
+    <label class="field-label">Password</label>
+    <input type="password" id="userPasswordInput" class="search-box" placeholder="Password">
+    <button class="btn-orange" style="width:100%;" onclick="loginUser()">Login</button>
+  </div>
+</div>
+
+<!-- READING MODAL -->
+<div id="readingModal" class="modal">
+  <div class="modal-content" style="max-width:500px;">
+    <h2 style="margin-bottom:18px;">Add Reading / Replacement</h2>
+    <label class="field-label">Battery</label>
+    <select id="readingBattery" class="search-box"></select>
+    <label class="field-label">Date & time</label>
+    <input type="datetime-local" id="readingDateTime" class="search-box">
+    <label class="field-label">Battery percentage</label>
+    <input type="number" id="readingPercent" class="search-box" placeholder="Battery Percentage" min="0" max="100">
+    <label style="margin-bottom:16px;">
+      <input type="checkbox" id="isReplacement" style="width:auto;margin:0;">
+      Battery Replaced (Stock &minus;1)
+    </label>
+    <button class="btn-orange" style="width:100%;" onclick="saveReading()">Save Reading</button>
+  </div>
+</div>
+
+<!-- VIEW DATA MODAL -->
+<div id="viewDataModal" class="modal">
+  <div class="modal-content">
+    <span class="close-btn" onclick="hideViewDataModal()">&times;</span>
+    <h2 style="margin-bottom:18px;">Battery Reading History</h2>
+    <button class="btn-orange" onclick="exportToPDF()">Export PDF</button>
+    <button class="btn-orange" onclick="exportToCSV()">Export CSV</button>
+    <button class="btn-outline" onclick="showImportModal()">Import data</button>
+    <br><br>
+    <div class="table-wrapper">
+      <table id="allDataTable"></table>
+    </div>
+  </div>
+</div>
+
+<!-- IMPORT MODAL -->
+<div id="importModal" class="modal">
+  <div class="modal-content" style="max-width:680px;">
+    <span class="close-btn" onclick="hideImportModal()">&times;</span>
+    <h2 style="margin-bottom:6px;">Import data</h2>
+    <p class="note-text" style="margin-bottom:18px;">
+      Import readings from a CSV or PDF export of this app (columns: Date, Battery, Percentage, Type, Technician).
+      Matching batteries are updated; new battery names are created automatically. Already-imported rows are skipped.
+    </p>
+
+    <div id="importDropzone"
+      style="border:2px dashed var(--border); border-radius:14px; padding:28px; text-align:center; cursor:pointer; margin-bottom:16px; transition:0.15s;"
+      onclick="document.getElementById('importFileInput').click()">
+      <i class="fas fa-file-arrow-up" style="font-size:28px; color:var(--orange); margin-bottom:10px; display:block;"></i>
+      <div style="font-weight:600; margin-bottom:4px;">Click to choose a file, or drag one here</div>
+      <div class="note-text">Accepts .csv and .pdf</div>
+    </div>
+    <input type="file" id="importFileInput" accept=".csv,.pdf,text/csv,application/pdf" style="display:none;">
+
+    <div id="importStatus"></div>
+
+    <div id="importPreviewWrap" style="display:none;">
+      <div class="table-wrapper" style="max-height:280px;">
+        <table id="importPreviewTable"></table>
+      </div>
+      <br>
+      <button class="btn-orange" id="importConfirmBtn" onclick="confirmImport()">Confirm import</button>
+      <button class="btn-ghost" onclick="cancelImportPreview()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+  // Set this to your Vercel deployment URL.
+  // Replace with your actual URL after deploying to Vercel.
+  window.BATTERY_API_BASE = 'https://battery-tracker-pro.vercel.app';
+</script>
+<script src="app.js"></script>
+</body>
+</html>
