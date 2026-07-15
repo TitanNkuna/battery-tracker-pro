@@ -1,8 +1,8 @@
 {
   "name": "battery-tracker-pro",
   "version": "1.0.0",
-  "description": "Multi-property battery tracking system",
   "private": true,
+  "type": "module",
   "dependencies": {
     "@neondatabase/serverless": "^0.10.4",
     "bcryptjs": "^2.4.3",
