@@ -1,14 +1,13 @@
 {
-  "buildCommand": "echo 'Static build complete'",
-  "outputDirectory": "battery-tracker-pro/public",
-  "public": "battery-tracker-pro/public",
+  "buildCommand": "npm install",
+  "outputDirectory": "public",
   "headers": [
     {
       "source": "/api/(.*)",
       "headers": [
-        { "key": "Access-Control-Allow-Origin", "value": "*" },
-        { "key": "Access-Control-Allow-Methods", "value": "GET,POST,OPTIONS" },
-        { "key": "Access-Control-Allow-Headers", "value": "Content-Type, Authorization" }
+        {"key": "Access-Control-Allow-Origin", "value": "*"},
+        {"key": "Access-Control-Allow-Methods", "value": "GET,POST,OPTIONS"},
+        {"key": "Access-Control-Allow-Headers", "value": "Content-Type, Authorization"}
       ]
     }
   ]
