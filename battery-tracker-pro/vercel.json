@@ -1,7 +1,7 @@
 {
-  "buildCommand": "cd battery-tracker-pro && npm install",
-  "outputDirectory": "battery-tracker-pro/public",
   "rootDirectory": "battery-tracker-pro",
+  "buildCommand": "npm install",
+  "outputDirectory": "public",
   "headers": [
     {
       "source": "/api/(.*)",
