@@ -1,7 +1,7 @@
 {
   "buildCommand": "echo 'Static build complete'",
-  "outputDirectory": "battery-tracker-pro/public",
-  "public": "battery-tracker-pro/public",
+  "outputDirectory": "battery-tracker-pro/public/index.html",
+  "public": "battery-tracker-pro/public/index.html",
   "headers": [
     {
       "source": "/api/(.*)",
